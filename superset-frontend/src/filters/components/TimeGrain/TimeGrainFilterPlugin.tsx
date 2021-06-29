@@ -25,12 +25,10 @@ import {
   tn,
 } from '@superset-ui/core';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Select } from 'src/common/components';
-import { Styles, StyledSelect } from '../common';
+import { Select } from 'src/components';
+import { Styles } from '../common';
 import { PluginFilterTimeGrainProps } from './types';
 import FormItem from '../../../components/Form/FormItem';
-
-const { Option } = Select;
 
 const Error = styled.div`
   color: ${({ theme }) => theme.colors.error.base};
@@ -97,13 +95,24 @@ export default function PluginFilterTimegrain(
     (data || []).length === 0
       ? t('No data')
       : tn('%s option', '%s options', data.length, data.length);
+
+  const options = (data || []).map(
+    (row: { name: string; duration: string }) => {
+      const { name, duration } = row;
+      return {
+        label: name,
+        value: duration,
+      };
+    },
+  );
+
   return (
     <Styles height={height} width={width}>
       <FormItem
         validateStatus={filterState.validateMessage && 'error'}
         extra={<Error>{filterState.validateMessage}</Error>}
       >
-        <StyledSelect
+        <Select
           allowClear
           value={value}
           placeholder={placeholderText}
@@ -112,16 +121,8 @@ export default function PluginFilterTimegrain(
           onBlur={unsetFocusedFilter}
           onFocus={setFocusedFilter}
           ref={inputRef}
-        >
-          {(data || []).map((row: { name: string; duration: string }) => {
-            const { name, duration } = row;
-            return (
-              <Option key={duration} value={duration}>
-                {name}
-              </Option>
-            );
-          })}
-        </StyledSelect>
+          options={options}
+        />
       </FormItem>
     </Styles>
   );

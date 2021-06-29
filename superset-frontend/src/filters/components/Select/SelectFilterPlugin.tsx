@@ -37,17 +37,15 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { Select } from 'src/common/components';
+import { Select } from 'src/components';
 import debounce from 'lodash/debounce';
 import { SLOW_DEBOUNCE } from 'src/constants';
 import { useImmerReducer } from 'use-immer';
 import Icons from 'src/components/Icons';
 import { usePrevious } from 'src/common/hooks/usePrevious';
 import { PluginFilterSelectProps, SelectValue } from './types';
-import { StyledSelect, Styles } from '../common';
+import { Styles } from '../common';
 import { getDataRecordFormatter, getSelectExtraFormData } from '../../utils';
-
-const { Option } = Select;
 
 type DataMaskAction =
   | { type: 'ownState'; ownState: JsonObject }
@@ -271,9 +269,30 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
       : tn('%s option', '%s options', data.length, data.length);
   const Icon = inverseSelection ? Icons.StopOutlined : Icons.CheckOutlined;
 
+  const options = [];
+  sortedData.forEach(row => {
+    const [value] = groupby.map(col => row[col]);
+    options.push({
+      label: labelFormatter(value, datatype),
+      value,
+    });
+  });
+
+  if (
+    currentSuggestionSearch &&
+    !ensureIsArray(filterState.value).some(
+      suggestion => suggestion === currentSuggestionSearch,
+    )
+  ) {
+    options.push({
+      label: `${t('Create "%s"', currentSuggestionSearch)}`,
+      value: currentSuggestionSearch,
+    });
+  }
+
   return (
     <Styles height={height} width={width}>
-      <StyledSelect
+      <Select
         allowClear
         // @ts-ignore
         value={filterState.value || []}
@@ -300,25 +319,8 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
         loading={isRefreshing}
         maxTagCount={5}
         menuItemSelectedIcon={<Icon iconSize="m" />}
-      >
-        {sortedData.map(row => {
-          const [value] = groupby.map(col => row[col]);
-          return (
-            // @ts-ignore
-            <Option key={`${value}`} value={value}>
-              {labelFormatter(value, datatype)}
-            </Option>
-          );
-        })}
-        {currentSuggestionSearch &&
-          !ensureIsArray(filterState.value).some(
-            suggestion => suggestion === currentSuggestionSearch,
-          ) && (
-            <Option value={currentSuggestionSearch}>
-              {`${t('Create "%s"', currentSuggestionSearch)}`}
-            </Option>
-          )}
-      </StyledSelect>
+        options={options}
+      />
     </Styles>
   );
 }

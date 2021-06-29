@@ -25,12 +25,10 @@ import {
   tn,
 } from '@superset-ui/core';
 import React, { useEffect, useState } from 'react';
-import { Select } from 'src/common/components';
-import { Styles, StyledSelect } from '../common';
+import { Select } from 'src/components';
+import { Styles } from '../common';
 import { PluginFilterTimeColumnProps } from './types';
 import FormItem from '../../../components/Form/FormItem';
-
-const { Option } = Select;
 
 const Error = styled.div`
   color: ${({ theme }) => theme.colors.error.base};
@@ -87,13 +85,24 @@ export default function PluginFilterTimeColumn(
     timeColumns.length === 0
       ? t('No time columns')
       : tn('%s option', '%s options', timeColumns.length, timeColumns.length);
+
+  const options = timeColumns.map(
+    (row: { column_name: string; verbose_name: string | null }) => {
+      const { column_name: columnName, verbose_name: verboseName } = row;
+      return {
+        label: verboseName ?? columnName,
+        value: columnName,
+      };
+    },
+  );
+
   return (
     <Styles height={height} width={width}>
       <FormItem
         validateStatus={filterState.validateMessage && 'error'}
         extra={<Error>{filterState.validateMessage}</Error>}
       >
-        <StyledSelect
+        <Select
           allowClear
           value={value}
           placeholder={placeholderText}
@@ -102,21 +111,8 @@ export default function PluginFilterTimeColumn(
           onBlur={unsetFocusedFilter}
           onFocus={setFocusedFilter}
           ref={inputRef}
-        >
-          {timeColumns.map(
-            (row: { column_name: string; verbose_name: string | null }) => {
-              const {
-                column_name: columnName,
-                verbose_name: verboseName,
-              } = row;
-              return (
-                <Option key={columnName} value={columnName}>
-                  {verboseName ?? columnName}
-                </Option>
-              );
-            },
-          )}
-        </StyledSelect>
+          options={options}
+        />
       </FormItem>
     </Styles>
   );
